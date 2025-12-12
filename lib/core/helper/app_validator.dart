@@ -4,13 +4,14 @@ abstract class AppValidator {
       return 'Please enter your email';
     }
 
-    var emailRegex = RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
+    var emailRegex = RegExp(
+      r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
+    );
     if (!emailRegex.hasMatch(value)) {
       return 'Please enter a valid email';
     }
     return null;
   }
-
 
   static String? validatePassword(String? value) {
     if (value == null || value.isEmpty) {
@@ -22,9 +23,7 @@ abstract class AppValidator {
     if (value.length < 8) {
       errors.add('• At least 8 characters');
     }
-    if (!RegExp(r'[A-Z]').hasMatch(value)) {
-      errors.add('• One uppercase letter (A–Z)');
-    }
+
     if (!RegExp(r'[a-z]').hasMatch(value)) {
       errors.add('• One lowercase letter (a–z)');
     }
@@ -39,15 +38,12 @@ abstract class AppValidator {
     return null;
   }
 
-
-
   static String? validateUsername(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter your username';
     }
     return null;
   }
-
 
   static String? validateConfirmPassword(String? value, String? password) {
     if (value == null || value.isEmpty) {
@@ -59,4 +55,10 @@ abstract class AppValidator {
     return null;
   }
 
+  static String? validatePhoneNumber(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your phone number';
+    }
+    return null;
+  }
 }

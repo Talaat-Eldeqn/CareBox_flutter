@@ -8,6 +8,7 @@ import 'package:carebox/core/widgets/custom_text_btn.dart';
 import 'package:carebox/core/widgets/custom_text_form_field.dart';
 import 'package:carebox/core/widgets/custom_unfilled_btn.dart';
 import 'package:carebox/core/widgets/svg_wrapper.dart';
+import 'package:carebox/features/auth/cubit/register_cubit/register_cubit.dart';
 import 'package:carebox/features/auth/cubit/register_cubit/register_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -15,7 +16,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../core/helper/app_validator.dart';
 import '../../../core/widgets/logo_png.dart';
-import '../cubit/register_cubit/register_cubit.dart';
 
 class RegisterView extends StatelessWidget {
   const RegisterView({super.key});
@@ -24,9 +24,22 @@ class RegisterView extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => RegisterCubit(),
-      child: BlocBuilder<RegisterCubit, RegisterState>(
+      child: BlocConsumer<RegisterCubit, RegisterState>(
+        listener: (context, state) {
+          if (state is RegisterError) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.error)));
+          } else if (state is RegisterSuccess) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.msg)));
+            // Navigate back to login after successful registration
+            MyNavigator.goBack(context);
+          }
+        },
         builder: (context, state) {
-          var cubit = RegisterCubit.get(context);
+          final cubit = RegisterCubit.get(context);
           return Form(
             key: cubit.formKey,
             child: Scaffold(
@@ -47,65 +60,80 @@ class RegisterView extends StatelessWidget {
                         ),
                       ),
                       SizedBox(height: 32.h),
+
+                      // full name
                       CustomTextFormField(
                         validator: AppValidator.validateUsername,
-                        controller: cubit.userNameController,
-                        hintText: "Username",
+                        controller: cubit.fullName,
+                        hintText: "Full name",
                       ),
                       SizedBox(height: 15.h),
+
+                      // email
                       CustomTextFormField(
                         validator: AppValidator.validateEmail,
-                        controller: cubit.emailController,
+                        controller: cubit.email,
                         hintText: "Email",
                       ),
                       SizedBox(height: 15.h),
+
+                      // password
                       CustomTextFormField(
                         validator: AppValidator.validatePassword,
-                        controller: cubit.passwordController,
+                        controller: cubit.password,
                         suffixIcon: IconButton(
-                          onPressed: cubit.changePasswordVisibility,
+                          onPressed: cubit.changePasswordSecure,
                           icon: SvgWrapper(svgPath: AppAssets.eye),
                         ),
-
-                        // hide when true
                         obscureText: cubit.passwordSecure,
                         hintText: "Password",
                       ),
                       SizedBox(height: 15.h),
+
+                      // confirm password
                       CustomTextFormField(
                         validator: (String? value) {
                           return AppValidator.validateConfirmPassword(
                             value,
-                            cubit.passwordController.text,
+                            cubit.password.text,
                           );
                         },
-                        controller: cubit.passwordConfirmController,
+                        controller: cubit.confirmPassword,
                         suffixIcon: IconButton(
-                          onPressed: cubit.changePasswordConfirmVisibility,
+                          onPressed: cubit.changeConfirmPasswordSecure,
                           icon: SvgWrapper(svgPath: AppAssets.eye),
                         ),
-                        // hide when true
-                        obscureText: cubit.passwordSecure,
+                        obscureText: cubit.confirmPasswordSecure,
                         hintText: "Confirm Password",
+                      ),
+
+                      SizedBox(height: 15.h),
+
+                      // phone number (optional)
+                      CustomTextFormField(
+                        validator: AppValidator.validatePhoneNumber,
+                        controller: cubit.phoneNumber,
+                        hintText: "Phone Number",
                       ),
 
                       SizedBox(height: 38.h),
 
-                      CustomBtn(
-                        text: 'Register',
-                        onPressed: () {
-                          cubit.formKey.currentState!.validate();
-                        },
-                      ),
+                      // Register button: show loading state if needed
+                      state is RegisterLoading
+                          ? const CircularProgressIndicator()
+                          : CustomBtn(
+                              text: 'Register',
+                              onPressed: () {
+                                cubit.onRegisterPressed();
+                              },
+                            ),
 
                       SizedBox(height: 20.h),
 
                       Row(
                         children: <Widget>[
                           Expanded(child: Divider()),
-
                           Text("Or Register With"),
-
                           Expanded(child: Divider()),
                         ],
                       ),
@@ -136,7 +164,6 @@ class RegisterView extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text('Already have an account?'),
-
                           CustomTextBtn(
                             text: "Login Now",
                             onPressed: () => MyNavigator.goBack(context),

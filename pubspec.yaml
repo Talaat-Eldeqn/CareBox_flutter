@@ -44,6 +44,7 @@ dependencies:
   fluentui_system_icons: ^1.1.273
   dartz: ^0.10.1
   google_sign_in: ^7.2.0
+  shared_preferences: ^2.5.4
   
 dev_dependencies:
   flutter_test:

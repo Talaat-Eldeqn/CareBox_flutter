@@ -1,3 +1,5 @@
+import 'package:carebox/features/auth/data/models/basic_login_model.dart';
+import 'package:carebox/features/auth/data/repo/auth_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -5,21 +7,33 @@ import 'login_state.dart';
 
 class LoginCubit extends Cubit<LoginState> {
   LoginCubit() : super(LoginInitial());
-
   static LoginCubit get(context) => BlocProvider.of(context);
 
-  var emailController = TextEditingController();
-  var passwordController = TextEditingController();
-  var formKey = GlobalKey<FormState>();
+  final email = TextEditingController();
+  final password = TextEditingController();
+  final formKey = GlobalKey<FormState>();
 
   bool passwordSecure = true;
 
-  void changePasswordVisibility() {
+  void changePasswordSecure() {
     passwordSecure = !passwordSecure;
-    emit(ChangePasswordVisibility());
+    emit(LoginPasswordChangedVisibility());
   }
 
-  void OnLoginPressed() {
-    formKey.currentState!.validate();
+  Future<void> onLoginPressed() async {
+    if (formKey.currentState?.validate() != true) return;
+
+    emit(LoginLoading());
+
+    final AuthRepo repo = AuthRepo();
+    final result = await repo.login(
+      email: email.text.trim(),
+      password: password.text,
+    );
+
+    result.fold(
+      (String error) => emit(LoginError(error)),
+      (BasicLoginModel loginModel) => emit(LoginSuccess(loginModel)),
+    );
   }
 }
